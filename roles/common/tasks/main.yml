@@ -1,0 +1,82 @@
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Common packages
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - aptitude
+    - htop
+    - python-is-python3
+    - git
+    - build-essential
+    - gdb
+    - lcov
+    - pkg-config
+    - libbz2-dev
+    - libffi-dev
+    - libgdbm-dev
+    - libgdbm-compat-dev
+    - liblzma-dev
+    - libncurses5-dev
+    - libreadline6-dev
+    - libsqlite3-dev
+    - libssl-dev
+    - lzma
+    - lzma-dev
+    - tk-dev
+    - uuid-dev
+    - zlib1g-dev
+    - python3-pip
+    - qemu-user-static
+
+- name: Add Docker apt key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add Docker repository
+  apt_repository:
+    repo: deb https://download.docker.com/linux/ubuntu jammy stable
+    state: present
+
+- name: Install Docker
+  apt:
+    name: "{{ packages }}"
+    update_cache: True
+  vars:
+    packages:
+    - docker-ce
+
+
+- name: Add NodeSource apt key
+  apt_key:
+    url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
+    state: present
+
+- name: Add NodeSource repository
+  apt_repository:
+    repo: deb https://deb.nodesource.com/node_18.x jammy main
+    state: present
+
+- name: Install Node from NodeSource
+  apt:
+    name: "{{ packages }}"
+    update_cache: True
+  vars:
+    packages:
+    - nodejs
+
+- name: Ensure Yarn is installed
+  command: npm install --global yarn
+
+- name: Create cartesi user
+  user:
+    name: cartesi
+    password: '{{ code_password | password_hash }}'
+    shell: /usr/bin/bash
+    groups: [sudo, docker]
+    create_home: True
+    skeleton: /etc/skel

@@ -1,0 +1,8 @@
+# Ansible Playbook for setting up the local machine for the
+# Cartesi Development Environment
+
+- hosts: 127.0.0.1
+  connection: local
+  roles:
+  - common
+  - code-server

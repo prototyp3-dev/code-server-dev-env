@@ -1,0 +1,76 @@
+- name: Download code-server deb
+  get_url:
+    url: 'https://github.com/coder/code-server/releases/download/v{{code_server_version}}/code-server_{{code_server_version}}_amd64.deb'
+    dest: '/srv/code-server_{{code_server_version}}_amd64.deb'
+    mode: '0640'
+
+- name: Install code-server
+  apt:
+    deb: '/srv/code-server_{{code_server_version}}_amd64.deb'
+
+- name: Install nginx
+  apt:
+    name: '{{ packages }}'
+  vars:
+    packages:
+    - nginx
+    - ssl-cert
+
+- name: Generate nginx configuration
+  template:
+    src: nginx.conf
+    dest: /etc/nginx/sites-available/coder.conf
+  notify:
+  - Restart nginx
+
+- name: Enable nginx configuration
+  file:
+    src: /etc/nginx/sites-available/coder.conf
+    dest: /etc/nginx/sites-enabled/coder.conf
+    state: link
+  notify:
+  - Restart nginx
+
+- name: Disable default nginx configuration
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify:
+  - Restart nginx
+
+- name: Create code-server config directory
+  file:
+    path: /home/cartesi/.config/code-server
+    state: directory
+    owner: cartesi
+    group: cartesi
+
+- name: Generate code-server configuration
+  template:
+    src: code_server_config.yaml
+    dest: /home/cartesi/.config/code-server/config.yaml
+    owner: cartesi
+    group: cartesi
+    mode: '0750'
+
+- name: Install code-server Extensions
+  command: code-server --install-extension {{ item }}
+  args:
+    chdir: /home/cartesi/
+  become: true
+  become_user: cartesi
+  with_items:
+  - ms-python.python
+
+- name: Install useful python packages
+  command: pip install --upgrade pip pip-tools pylama
+  args:
+    chdir: /home/cartesi/
+  become: true
+  become_user: cartesi
+
+- name: Enable code-server
+  systemd:
+    name: 'code-server@cartesi'
+    state: started
+    enabled: true

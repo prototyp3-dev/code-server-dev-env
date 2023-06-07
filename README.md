@@ -67,7 +67,7 @@ manualy execute the playbook, follow the steps:
 3. Clone this repository:
 
     ```shell
-    git clone https://github.com/felipefg/cartesi-dev-env
+    git clone https://github.com/prototyp3-dev/code-server-dev-env
     cd cartesi-dev-env
     ```
 
